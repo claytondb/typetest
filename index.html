@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TypeTest - Typing Speed Test</title>
+  <meta name="description" content="Test and improve your typing speed with real-time WPM tracking, multiple modes, and detailed analytics.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
   <style>
     * {
@@ -13,32 +14,53 @@
     }
 
     :root {
-      --bg-primary: #1a1a2e;
-      --bg-secondary: #16213e;
-      --bg-card: rgba(255, 255, 255, 0.05);
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --bg-card-hover: rgba(255, 255, 255, 0.06);
       --text-primary: #e2e8f0;
       --text-muted: #64748b;
-      --text-dim: #475569;
+      --text-dim: #3b4252;
       --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.3);
       --accent-hover: #34d399;
+      --accent-secondary: #06b6d4;
       --error: #ef4444;
+      --error-glow: rgba(239, 68, 68, 0.3);
       --warning: #f59e0b;
-      --border: rgba(255, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.08);
+      --caret: #10b981;
     }
 
     body {
-      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      background: var(--bg-primary);
       min-height: 100vh;
       color: var(--text-primary);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem;
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       width: 100%;
     }
 
@@ -47,27 +69,39 @@
       margin-bottom: 2rem;
     }
 
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+      filter: drop-shadow(0 0 10px var(--accent-glow));
+    }
+
     h1 {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--accent) 0%, #06b6d4 100%);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 0.5rem;
     }
 
     .tagline {
       color: var(--text-muted);
-      font-size: 1rem;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
     }
 
     /* Settings Bar */
     .settings-bar {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
     }
 
@@ -80,56 +114,123 @@
     }
 
     .setting-btn {
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 0.875rem;
       background: transparent;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       transition: all 0.2s;
+      position: relative;
     }
 
     .setting-btn:hover {
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--bg-card-hover);
     }
 
     .setting-btn.active {
       background: var(--accent);
-      color: white;
+      color: #000;
+      font-weight: 600;
     }
 
-    /* Stats Display */
-    .stats-bar {
+    .setting-btn:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      height: 50%;
+      width: 1px;
+      background: var(--border);
+    }
+
+    /* Top Stats Bar */
+    .top-stats {
       display: flex;
       justify-content: center;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 3rem;
+      margin-bottom: 1rem;
     }
 
-    .stat {
-      text-align: center;
+    .top-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
     }
 
-    .stat-value {
-      font-size: 2.5rem;
+    .top-stat-value {
+      font-size: 3rem;
       font-weight: 700;
       color: var(--accent);
+      font-variant-numeric: tabular-nums;
       line-height: 1;
+      text-shadow: 0 0 30px var(--accent-glow);
     }
 
-    .stat-value.error {
-      color: var(--error);
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
+    .top-stat-value.secondary {
       color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 0.25rem;
+      font-size: 1.5rem;
+      text-shadow: none;
+    }
+
+    .top-stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-transform: lowercase;
+    }
+
+    .top-stat-divider {
+      color: var(--text-dim);
+      font-size: 2rem;
+    }
+
+    /* Timer */
+    .timer-container {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .timer {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      font-variant-numeric: tabular-nums;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 1rem;
+      background: var(--bg-card);
+      border-radius: 2rem;
+      border: 1px solid var(--border);
+    }
+
+    .timer.running {
+      color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .timer.warning {
+      color: var(--warning);
+      border-color: var(--warning);
+    }
+
+    .timer.danger {
+      color: var(--error);
+      border-color: var(--error);
+      animation: pulse 0.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .timer-icon {
+      font-size: 0.875rem;
     }
 
     /* Typing Area */
@@ -138,37 +239,45 @@
       border-radius: 1rem;
       padding: 2rem;
       border: 1px solid var(--border);
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       position: relative;
       overflow: hidden;
+      cursor: text;
+      transition: all 0.3s;
     }
 
-    .typing-container::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--accent), #06b6d4);
-      opacity: 0;
-      transition: opacity 0.3s;
+    .typing-container:hover {
+      border-color: rgba(255, 255, 255, 0.15);
     }
 
-    .typing-container.active::before {
-      opacity: 1;
+    .typing-container.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px var(--accent-glow);
+    }
+
+    .typing-container.finished {
+      border-color: var(--accent);
     }
 
     .text-display {
-      font-size: 1.5rem;
-      line-height: 2;
-      letter-spacing: 0.02em;
-      min-height: 120px;
+      font-size: 1.4rem;
+      line-height: 2.2;
+      letter-spacing: 0.01em;
+      min-height: 150px;
       user-select: none;
+      position: relative;
+    }
+
+    .word {
+      display: inline-block;
+      margin-right: 0.4em;
+      position: relative;
     }
 
     .char {
-      transition: color 0.1s;
+      display: inline-block;
+      transition: color 0.05s;
+      position: relative;
     }
 
     .char.correct {
@@ -177,22 +286,49 @@
 
     .char.incorrect {
       color: var(--error);
-      text-decoration: underline;
+      position: relative;
+    }
+
+    .char.incorrect::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--error);
+      border-radius: 1px;
     }
 
     .char.current {
-      background: var(--accent);
-      color: var(--bg-primary);
-      animation: blink 1s infinite;
+      color: var(--text-dim);
     }
 
     .char.upcoming {
       color: var(--text-dim);
     }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+    /* Smooth caret */
+    .caret {
+      position: absolute;
+      width: 2px;
+      height: 1.6em;
+      background: var(--caret);
+      border-radius: 1px;
+      pointer-events: none;
+      transition: left 0.08s ease-out, top 0.08s ease-out;
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: caretBlink 1s infinite;
+    }
+
+    @keyframes caretBlink {
+      0%, 40%, 100% { opacity: 1; }
+      50%, 90% { opacity: 0; }
+    }
+
+    .typing-container.active .caret {
+      animation: none;
+      opacity: 1;
     }
 
     .hidden-input {
@@ -206,13 +342,25 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      padding: 1rem 2rem;
+      background: var(--bg-secondary);
+      padding: 0.75rem 1.5rem;
       border-radius: 0.5rem;
       color: var(--text-muted);
       font-size: 0.875rem;
       pointer-events: none;
       transition: opacity 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .click-hint kbd {
+      background: var(--bg-card-hover);
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-family: inherit;
+      border: 1px solid var(--border);
     }
 
     .typing-container.active .click-hint,
@@ -222,7 +370,7 @@
 
     /* Progress Bar */
     .progress-container {
-      height: 4px;
+      height: 3px;
       background: var(--border);
       border-radius: 2px;
       margin-top: 1.5rem;
@@ -231,32 +379,76 @@
 
     .progress-bar {
       height: 100%;
-      background: linear-gradient(90deg, var(--accent), #06b6d4);
+      background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
       border-radius: 2px;
-      transition: width 0.1s;
+      transition: width 0.1s ease-out;
       width: 0%;
+      box-shadow: 0 0 10px var(--accent-glow);
     }
 
-    /* Timer */
-    .timer {
-      font-size: 3rem;
-      font-weight: 700;
-      color: var(--text-dim);
-      text-align: center;
-      margin-bottom: 1rem;
-      font-variant-numeric: tabular-nums;
+    /* Live accuracy indicator */
+    .accuracy-indicator {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
 
-    .timer.running {
+    .typing-container.active .accuracy-indicator {
+      opacity: 1;
+    }
+
+    .accuracy-indicator.good {
       color: var(--accent);
+      border-color: var(--accent);
     }
 
-    .timer.warning {
+    .accuracy-indicator.warning {
       color: var(--warning);
+      border-color: var(--warning);
     }
 
-    .timer.danger {
+    .accuracy-indicator.bad {
       color: var(--error);
+      border-color: var(--error);
+    }
+
+    /* Bottom stats row */
+    .bottom-stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .bottom-stat {
+      text-align: center;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      min-width: 100px;
+    }
+
+    .bottom-stat-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .bottom-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.125rem;
     }
 
     /* Results Modal */
@@ -266,7 +458,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -274,6 +466,7 @@
       visibility: hidden;
       transition: all 0.3s;
       z-index: 100;
+      backdrop-filter: blur(4px);
     }
 
     .results-overlay.visible {
@@ -285,78 +478,150 @@
       background: var(--bg-secondary);
       border-radius: 1rem;
       padding: 2rem;
-      max-width: 500px;
+      max-width: 480px;
       width: 90%;
       border: 1px solid var(--border);
-      transform: scale(0.9);
+      transform: scale(0.9) translateY(20px);
       transition: transform 0.3s;
     }
 
     .results-overlay.visible .results-modal {
-      transform: scale(1);
+      transform: scale(1) translateY(0);
+    }
+
+    .results-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .results-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      display: block;
     }
 
     .results-title {
-      text-align: center;
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
       color: var(--accent);
     }
 
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+    .results-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
     }
 
-    .result-item {
+    .results-main {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
       background: var(--bg-card);
-      padding: 1rem;
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
+    }
+
+    .result-main-item {
       text-align: center;
     }
 
-    .result-value {
-      font-size: 2rem;
+    .result-main-value {
+      font-size: 3rem;
       font-weight: 700;
       color: var(--accent);
+      line-height: 1;
     }
 
-    .result-value.bad {
-      color: var(--error);
-    }
-
-    .result-label {
+    .result-main-label {
       font-size: 0.75rem;
       color: var(--text-muted);
       text-transform: uppercase;
       margin-top: 0.25rem;
     }
 
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-item {
+      background: var(--bg-card);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    .result-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .result-value.bad {
+      color: var(--error);
+    }
+
+    .result-value.good {
+      color: var(--accent);
+    }
+
+    .result-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 0.125rem;
+    }
+
+    .personal-best {
+      text-align: center;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--accent);
+    }
+
+    .personal-best-label {
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .personal-best.new::before {
+      content: '🎉 ';
+    }
+
     .results-actions {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .btn {
       flex: 1;
-      padding: 0.75rem 1.5rem;
+      padding: 0.875rem 1.5rem;
       border: none;
       border-radius: 0.5rem;
       font-family: inherit;
-      font-size: 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
     .btn-primary {
       background: var(--accent);
-      color: white;
+      color: #000;
     }
 
     .btn-primary:hover {
       background: var(--accent-hover);
+      transform: translateY(-1px);
     }
 
     .btn-secondary {
@@ -366,72 +631,119 @@
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--bg-card-hover);
+      border-color: var(--text-muted);
     }
 
     /* Keyboard Heatmap */
     .keyboard-section {
-      margin-top: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
     }
 
     .section-title {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 1rem;
-      text-align: center;
+    }
+
+    .section-toggle {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .section-toggle:hover {
+      color: var(--text-primary);
     }
 
     .keyboard {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.2rem;
       align-items: center;
+      padding: 1rem;
+      background: var(--bg-card);
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+    }
+
+    .keyboard.hidden {
+      display: none;
     }
 
     .keyboard-row {
       display: flex;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .key {
-      width: 2.5rem;
-      height: 2.5rem;
-      background: var(--bg-card);
+      width: 2.25rem;
+      height: 2.25rem;
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
       border-radius: 0.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      transition: all 0.2s;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      transition: all 0.1s;
+      position: relative;
     }
 
     .key.space {
-      width: 12rem;
+      width: 10rem;
     }
 
     .key.pressed {
       background: var(--accent);
-      color: white;
-      transform: scale(0.95);
+      color: #000;
+      border-color: var(--accent);
+      transform: scale(0.92);
+      box-shadow: 0 0 15px var(--accent-glow);
     }
 
     .key.error-key {
-      background: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.2);
       border-color: var(--error);
+      color: var(--error);
+    }
+
+    .key.error-key::after {
+      content: attr(data-errors);
+      position: absolute;
+      top: -0.4rem;
+      right: -0.4rem;
+      font-size: 0.5rem;
+      background: var(--error);
+      color: white;
+      width: 0.875rem;
+      height: 0.875rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* History Section */
     .history-section {
-      margin-top: 2rem;
+      margin-top: 1.5rem;
     }
 
     .history-list {
       background: var(--bg-card);
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
       border: 1px solid var(--border);
       overflow: hidden;
     }
@@ -440,17 +752,46 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 1rem;
+      padding: 0.875rem 1rem;
       border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+
+    .history-item:hover {
+      background: var(--bg-card-hover);
     }
 
     .history-item:last-child {
       border-bottom: none;
     }
 
+    .history-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .history-wpm {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 3.5rem;
+    }
+
+    .history-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
     .history-date {
       color: var(--text-muted);
       font-size: 0.75rem;
+    }
+
+    .history-mode {
+      font-size: 0.7rem;
+      color: var(--text-dim);
     }
 
     .history-stats {
@@ -459,18 +800,39 @@
     }
 
     .history-stat {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
     .history-stat span {
-      color: var(--accent);
-      font-weight: 600;
+      color: var(--text-primary);
+      font-weight: 500;
     }
 
     .empty-history {
-      padding: 2rem;
+      padding: 2.5rem;
       text-align: center;
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    .clear-history {
+      text-align: center;
+      padding: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .clear-history button {
+      background: none;
+      border: none;
       color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .clear-history button:hover {
+      color: var(--error);
     }
 
     /* Footer */
@@ -478,13 +840,47 @@
       margin-top: auto;
       padding-top: 2rem;
       text-align: center;
-      color: var(--text-muted);
+      color: var(--text-dim);
       font-size: 0.75rem;
     }
 
     footer a {
       color: var(--accent);
       text-decoration: none;
+    }
+
+    footer kbd {
+      background: var(--bg-card);
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.2rem;
+      font-family: inherit;
+      font-size: 0.7rem;
+      border: 1px solid var(--border);
+    }
+
+    /* Sound toggle */
+    .sound-toggle {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      transition: all 0.2s;
+    }
+
+    .sound-toggle:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .sound-toggle.active {
+      color: var(--accent);
+      border-color: var(--accent);
     }
 
     /* Responsive */
@@ -494,29 +890,51 @@
       }
 
       h1 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
       }
 
       .text-display {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
+        line-height: 2;
+        min-height: 120px;
       }
 
-      .stat-value {
-        font-size: 1.75rem;
+      .top-stats {
+        gap: 1.5rem;
       }
 
-      .timer {
+      .top-stat-value {
         font-size: 2rem;
       }
 
+      .top-stat-value.secondary {
+        font-size: 1.25rem;
+      }
+
+      .timer {
+        font-size: 1rem;
+      }
+
       .key {
-        width: 1.75rem;
-        height: 1.75rem;
-        font-size: 0.625rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.55rem;
       }
 
       .key.space {
-        width: 8rem;
+        width: 6rem;
+      }
+
+      .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .results-main {
+        gap: 1.5rem;
+      }
+
+      .result-main-value {
+        font-size: 2.5rem;
       }
     }
   </style>
@@ -524,8 +942,11 @@
 <body>
   <div class="container">
     <header>
-      <h1>⌨️ TypeTest</h1>
-      <p class="tagline">Test your typing speed and accuracy</p>
+      <div class="logo">
+        <span class="logo-icon">⌨️</span>
+        <h1>TypeTest</h1>
+      </div>
+      <p class="tagline">measure your typing speed</p>
     </header>
 
     <!-- Settings -->
@@ -534,55 +955,80 @@
         <button class="setting-btn" data-time="15">15s</button>
         <button class="setting-btn active" data-time="30">30s</button>
         <button class="setting-btn" data-time="60">60s</button>
-        <button class="setting-btn" data-time="120">120s</button>
+        <button class="setting-btn" data-time="120">2m</button>
       </div>
       <div class="setting-group" id="mode-settings">
-        <button class="setting-btn active" data-mode="quotes">Quotes</button>
-        <button class="setting-btn" data-mode="code">Code</button>
-        <button class="setting-btn" data-mode="words">Words</button>
+        <button class="setting-btn active" data-mode="quotes">quotes</button>
+        <button class="setting-btn" data-mode="code">code</button>
+        <button class="setting-btn" data-mode="words">words</button>
       </div>
     </div>
 
-    <!-- Live Stats -->
-    <div class="stats-bar">
-      <div class="stat">
-        <div class="stat-value" id="live-wpm">0</div>
-        <div class="stat-label">WPM</div>
+    <!-- Main Stats -->
+    <div class="top-stats">
+      <div class="top-stat">
+        <span class="top-stat-value" id="live-wpm">0</span>
+        <span class="top-stat-label">wpm</span>
       </div>
-      <div class="stat">
-        <div class="stat-value" id="live-accuracy">100</div>
-        <div class="stat-label">Accuracy %</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="live-errors">0</div>
-        <div class="stat-label">Errors</div>
+      <span class="top-stat-divider">/</span>
+      <div class="top-stat">
+        <span class="top-stat-value secondary" id="live-accuracy">100</span>
+        <span class="top-stat-label">%</span>
       </div>
     </div>
 
     <!-- Timer -->
-    <div class="timer" id="timer">30</div>
+    <div class="timer-container">
+      <div class="timer" id="timer">
+        <span class="timer-icon">⏱</span>
+        <span id="timer-value">30</span>
+      </div>
+    </div>
 
     <!-- Typing Area -->
     <div class="typing-container" id="typing-container">
+      <div class="accuracy-indicator" id="accuracy-indicator">100%</div>
       <div class="text-display" id="text-display"></div>
+      <div class="caret" id="caret"></div>
       <input type="text" class="hidden-input" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <div class="click-hint">Click here or press any key to start</div>
+      <div class="click-hint">click or press any key to start</div>
       <div class="progress-container">
         <div class="progress-bar" id="progress-bar"></div>
       </div>
     </div>
 
+    <!-- Bottom Stats -->
+    <div class="bottom-stats">
+      <div class="bottom-stat">
+        <div class="bottom-stat-value" id="stat-chars">0</div>
+        <div class="bottom-stat-label">characters</div>
+      </div>
+      <div class="bottom-stat">
+        <div class="bottom-stat-value" id="stat-errors">0</div>
+        <div class="bottom-stat-label">errors</div>
+      </div>
+      <div class="bottom-stat">
+        <div class="bottom-stat-value" id="stat-raw">0</div>
+        <div class="bottom-stat-label">raw wpm</div>
+      </div>
+    </div>
+
     <!-- Keyboard Heatmap -->
     <div class="keyboard-section">
-      <div class="section-title">Keyboard</div>
+      <div class="section-header">
+        <div class="section-title">Keyboard</div>
+        <button class="section-toggle" id="keyboard-toggle">hide</button>
+      </div>
       <div class="keyboard" id="keyboard"></div>
     </div>
 
     <!-- History -->
     <div class="history-section">
-      <div class="section-title">Recent Results</div>
+      <div class="section-header">
+        <div class="section-title">History</div>
+      </div>
       <div class="history-list" id="history-list">
-        <div class="empty-history">No tests completed yet</div>
+        <div class="empty-history">Complete a test to see your history</div>
       </div>
     </div>
   </div>
@@ -590,38 +1036,62 @@
   <!-- Results Modal -->
   <div class="results-overlay" id="results-overlay">
     <div class="results-modal">
-      <h2 class="results-title">🎉 Test Complete!</h2>
+      <div class="results-header">
+        <span class="results-icon">🎯</span>
+        <h2 class="results-title">Test Complete</h2>
+        <p class="results-subtitle" id="results-subtitle">30s • quotes</p>
+      </div>
+      
+      <div class="results-main">
+        <div class="result-main-item">
+          <div class="result-main-value" id="result-wpm">0</div>
+          <div class="result-main-label">WPM</div>
+        </div>
+        <div class="result-main-item">
+          <div class="result-main-value" id="result-accuracy">0%</div>
+          <div class="result-main-label">Accuracy</div>
+        </div>
+      </div>
+
       <div class="results-grid">
         <div class="result-item">
-          <div class="result-value" id="result-wpm">0</div>
-          <div class="result-label">Words per Minute</div>
-        </div>
-        <div class="result-item">
-          <div class="result-value" id="result-accuracy">0</div>
-          <div class="result-label">Accuracy %</div>
+          <div class="result-value" id="result-raw">0</div>
+          <div class="result-label">Raw</div>
         </div>
         <div class="result-item">
           <div class="result-value" id="result-chars">0</div>
-          <div class="result-label">Characters</div>
+          <div class="result-label">Chars</div>
+        </div>
+        <div class="result-item">
+          <div class="result-value" id="result-correct">0</div>
+          <div class="result-label">Correct</div>
         </div>
         <div class="result-item">
           <div class="result-value" id="result-errors">0</div>
           <div class="result-label">Errors</div>
         </div>
       </div>
+
+      <div class="personal-best" id="personal-best" style="display:none;">
+        <span class="personal-best-label">New Personal Best!</span>
+      </div>
+
       <div class="results-actions">
-        <button class="btn btn-secondary" id="view-history-btn">View History</button>
-        <button class="btn btn-primary" id="restart-btn">Try Again</button>
+        <button class="btn btn-secondary" id="view-history-btn">📊 History</button>
+        <button class="btn btn-primary" id="restart-btn">↻ Try Again</button>
       </div>
     </div>
   </div>
 
+  <!-- Sound Toggle -->
+  <button class="sound-toggle" id="sound-toggle" title="Toggle sound">🔇</button>
+
   <footer>
-    Built with ☕ by <a href="https://github.com/claytondb">Nero</a> • Press <kbd>Tab</kbd> + <kbd>Enter</kbd> to restart
+    <kbd>Tab</kbd> + <kbd>Enter</kbd> to restart • Built by <a href="https://github.com/claytondb" target="_blank">Nero</a>
   </footer>
 
   <script>
-    // Quotes database
+    // Extended quotes database
     const quotes = [
       "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle.",
       "Life is what happens when you're busy making other plans.",
@@ -642,36 +1112,47 @@
       "I find that the harder I work, the more luck I seem to have.",
       "The way to get started is to quit talking and begin doing.",
       "If you set your goals ridiculously high and it's a failure, you will fail above everyone else's success.",
-      "The real test is not whether you avoid this failure, because you won't. It's whether you let it harden or shame you into inaction.",
+      "Your time is limited, don't waste it living someone else's life.",
+      "Stay hungry, stay foolish.",
+      "Innovation distinguishes between a leader and a follower.",
+      "The people who are crazy enough to think they can change the world are the ones who do.",
+      "Quality is not an act, it is a habit.",
+      "The only thing we have to fear is fear itself.",
+      "Ask not what your country can do for you, ask what you can do for your country.",
+      "That's one small step for man, one giant leap for mankind.",
+      "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.",
+      "Two roads diverged in a wood, and I took the one less traveled by, and that has made all the difference.",
+      "The best time to plant a tree was 20 years ago. The second best time is now.",
     ];
 
     const codeSnippets = [
-      "function fibonacci(n) { return n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2); }",
       "const sum = arr.reduce((acc, val) => acc + val, 0);",
+      "function fibonacci(n) { return n <= 1 ? n : fibonacci(n-1) + fibonacci(n-2); }",
       "const unique = [...new Set(array)];",
       "async function fetchData(url) { const res = await fetch(url); return res.json(); }",
-      "const debounce = (fn, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => fn(...args), delay); }; };",
+      "const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };",
       "const deepClone = obj => JSON.parse(JSON.stringify(obj));",
       "const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;",
       "const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);",
       "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));",
-      "const chunk = (arr, size) => arr.reduce((acc, _, i) => (i % size ? acc : [...acc, arr.slice(i, i + size)]), []);",
+      "arr.sort((a, b) => a.localeCompare(b));",
+      "const flatten = arr => arr.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), []);",
+      "const isPalindrome = str => str === str.split('').reverse().join('');",
+      "const groupBy = (arr, key) => arr.reduce((r, x) => ({ ...r, [x[key]]: [...(r[x[key]] || []), x] }), {});",
+      "const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);",
+      "const memoize = fn => { const cache = {}; return (...args) => cache[args] || (cache[args] = fn(...args)); };",
     ];
 
     const commonWords = [
-      "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
-      "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
-      "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
-      "an", "will", "my", "one", "all", "would", "there", "their", "what", "so",
-      "up", "out", "if", "about", "who", "get", "which", "go", "me", "when",
-      "make", "can", "like", "time", "no", "just", "him", "know", "take", "people",
-      "into", "year", "your", "good", "some", "could", "them", "see", "other", "than",
-      "then", "now", "look", "only", "come", "its", "over", "think", "also", "back",
-      "after", "use", "two", "how", "our", "work", "first", "well", "way", "even",
-      "new", "want", "because", "any", "these", "give", "day", "most", "us", "very"
+      "the", "be", "to", "of", "and", "a", "in", "that", "have", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
+      "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their",
+      "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "when", "make", "can", "like", "time", "no", "just",
+      "him", "know", "take", "people", "into", "year", "your", "good", "some", "could", "them", "see", "other", "than", "then", "now",
+      "look", "only", "come", "its", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well",
+      "way", "even", "new", "want", "because", "any", "these", "give", "day", "most", "us", "code", "type", "fast", "slow", "test",
+      "word", "text", "key", "speed", "quick", "brown", "fox", "jump", "lazy", "dog", "computer", "keyboard", "screen", "program"
     ];
 
-    // Keyboard layout
     const keyboardLayout = [
       ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
@@ -679,6 +1160,25 @@
       ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'],
       ['SPACE']
     ];
+
+    // Audio
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let soundEnabled = false;
+
+    function playKeySound(isError = false) {
+      if (!soundEnabled) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = isError ? 200 : 800 + Math.random() * 200;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+      gain.gain.exponentialDecayTo = 0.001;
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
 
     // State
     let testDuration = 30;
@@ -694,19 +1194,23 @@
     let isActive = false;
     let isFinished = false;
     let keyErrors = {};
+    let charElements = [];
 
     // DOM Elements
     const textDisplay = document.getElementById('text-display');
     const hiddenInput = document.getElementById('hidden-input');
     const typingContainer = document.getElementById('typing-container');
     const timerEl = document.getElementById('timer');
+    const timerValue = document.getElementById('timer-value');
     const liveWpm = document.getElementById('live-wpm');
     const liveAccuracy = document.getElementById('live-accuracy');
-    const liveErrors = document.getElementById('live-errors');
     const progressBar = document.getElementById('progress-bar');
     const resultsOverlay = document.getElementById('results-overlay');
     const keyboard = document.getElementById('keyboard');
     const historyList = document.getElementById('history-list');
+    const caret = document.getElementById('caret');
+    const accuracyIndicator = document.getElementById('accuracy-indicator');
+    const soundToggle = document.getElementById('sound-toggle');
 
     // Initialize keyboard
     function initKeyboard() {
@@ -725,18 +1229,18 @@
       });
     }
 
-    // Get random text based on mode
+    // Get random text
     function getRandomText() {
       if (testMode === 'quotes') {
-        // Get 2-3 random quotes
         const shuffled = [...quotes].sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, 3).join(' ');
+        const count = testDuration <= 30 ? 2 : testDuration <= 60 ? 3 : 4;
+        return shuffled.slice(0, count).join(' ');
       } else if (testMode === 'code') {
         const shuffled = [...codeSnippets].sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, 3).join(' ');
+        const count = testDuration <= 30 ? 2 : testDuration <= 60 ? 4 : 6;
+        return shuffled.slice(0, count).join(' ');
       } else {
-        // Generate random words
-        const wordCount = 50 + Math.floor(testDuration / 2);
+        const wordCount = Math.floor(testDuration * 2.5);
         return Array.from({ length: wordCount }, () => 
           commonWords[Math.floor(Math.random() * commonWords.length)]
         ).join(' ');
@@ -745,54 +1249,97 @@
 
     // Render text display
     function renderText() {
-      textDisplay.innerHTML = currentText.split('').map((char, i) => {
-        let className = 'char ';
-        if (i < currentIndex) {
-          className += correctChars > i - errors ? 'correct' : 'incorrect';
-        } else if (i === currentIndex) {
-          className += 'current';
-        } else {
-          className += 'upcoming';
+      charElements = [];
+      textDisplay.innerHTML = '';
+      
+      const words = currentText.split(' ');
+      words.forEach((word, wordIndex) => {
+        const wordEl = document.createElement('span');
+        wordEl.className = 'word';
+        
+        word.split('').forEach((char, charIndex) => {
+          const charEl = document.createElement('span');
+          charEl.className = 'char upcoming';
+          charEl.textContent = char;
+          charEl.dataset.index = charElements.length;
+          charElements.push(charEl);
+          wordEl.appendChild(charEl);
+        });
+        
+        // Add space after word (except last)
+        if (wordIndex < words.length - 1) {
+          const spaceEl = document.createElement('span');
+          spaceEl.className = 'char upcoming';
+          spaceEl.innerHTML = '&nbsp;';
+          spaceEl.dataset.index = charElements.length;
+          charElements.push(spaceEl);
+          wordEl.appendChild(spaceEl);
         }
-        return `<span class="${className}">${char === ' ' ? '&nbsp;' : char}</span>`;
-      }).join('');
+        
+        textDisplay.appendChild(wordEl);
+      });
+      
+      updateCaret();
+    }
+
+    // Update caret position
+    function updateCaret() {
+      if (currentIndex >= charElements.length) {
+        caret.style.opacity = '0';
+        return;
+      }
+      
+      const currentChar = charElements[currentIndex];
+      if (currentChar) {
+        const rect = currentChar.getBoundingClientRect();
+        const containerRect = textDisplay.getBoundingClientRect();
+        caret.style.left = (rect.left - containerRect.left) + 'px';
+        caret.style.top = (rect.top - containerRect.top) + 'px';
+        caret.style.height = rect.height + 'px';
+        caret.style.opacity = '1';
+      }
     }
 
     // Update stats
     function updateStats() {
-      if (!startTime) return;
+      if (!startTime) {
+        liveWpm.textContent = '0';
+        liveAccuracy.textContent = '100';
+        return;
+      }
       
-      const elapsed = (Date.now() - startTime) / 1000 / 60; // minutes
+      const elapsed = (Date.now() - startTime) / 1000 / 60;
+      const rawWpm = elapsed > 0 ? Math.round((totalTyped / 5) / elapsed) : 0;
       const wpm = elapsed > 0 ? Math.round((correctChars / 5) / elapsed) : 0;
       const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
       
       liveWpm.textContent = wpm;
       liveAccuracy.textContent = accuracy;
-      liveErrors.textContent = errors;
       
-      if (accuracy < 90) {
-        liveAccuracy.classList.add('error');
-      } else {
-        liveAccuracy.classList.remove('error');
-      }
+      document.getElementById('stat-chars').textContent = totalTyped;
+      document.getElementById('stat-errors').textContent = errors;
+      document.getElementById('stat-raw').textContent = rawWpm;
       
-      // Update progress
+      // Update accuracy indicator
+      accuracyIndicator.textContent = accuracy + '%';
+      accuracyIndicator.className = 'accuracy-indicator';
+      if (accuracy >= 97) accuracyIndicator.classList.add('good');
+      else if (accuracy >= 90) accuracyIndicator.classList.add('warning');
+      else accuracyIndicator.classList.add('bad');
+      
       const progress = (currentIndex / currentText.length) * 100;
       progressBar.style.width = progress + '%';
     }
 
-    // Update timer display
+    // Update timer
     function updateTimer() {
-      timerEl.textContent = timeLeft;
+      timerValue.textContent = timeLeft;
       timerEl.className = 'timer';
       
       if (isActive) {
         timerEl.classList.add('running');
-        if (timeLeft <= 5) {
-          timerEl.classList.add('danger');
-        } else if (timeLeft <= 10) {
-          timerEl.classList.add('warning');
-        }
+        if (timeLeft <= 5) timerEl.classList.add('danger');
+        else if (timeLeft <= 10) timerEl.classList.add('warning');
       }
     }
 
@@ -805,14 +1352,14 @@
       startTime = Date.now();
       typingContainer.classList.add('active');
       
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      
       timerInterval = setInterval(() => {
         timeLeft--;
         updateTimer();
         updateStats();
         
-        if (timeLeft <= 0) {
-          endTest();
-        }
+        if (timeLeft <= 0) endTest();
       }, 1000);
     }
 
@@ -826,25 +1373,45 @@
       
       const elapsed = (Date.now() - startTime) / 1000 / 60;
       const wpm = Math.round((correctChars / 5) / elapsed);
+      const rawWpm = Math.round((totalTyped / 5) / elapsed);
       const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
       
-      // Show results
+      // Populate results
       document.getElementById('result-wpm').textContent = wpm;
       document.getElementById('result-accuracy').textContent = accuracy + '%';
-      document.getElementById('result-chars').textContent = correctChars;
+      document.getElementById('result-raw').textContent = rawWpm;
+      document.getElementById('result-chars').textContent = totalTyped;
+      document.getElementById('result-correct').textContent = correctChars;
       document.getElementById('result-errors').textContent = errors;
+      document.getElementById('results-subtitle').textContent = `${testDuration}s • ${testMode}`;
       
-      if (errors > 10) {
-        document.getElementById('result-errors').classList.add('bad');
+      // Style errors
+      const errorsEl = document.getElementById('result-errors');
+      errorsEl.className = 'result-value' + (errors > 5 ? ' bad' : '');
+      
+      // Check personal best
+      const pb = getPersonalBest();
+      const pbEl = document.getElementById('personal-best');
+      if (!pb || wpm > pb) {
+        pbEl.style.display = 'block';
+        pbEl.className = 'personal-best' + (pb ? ' new' : '');
+        setPersonalBest(wpm);
+      } else {
+        pbEl.style.display = 'none';
       }
       
       resultsOverlay.classList.add('visible');
-      
-      // Save to history
-      saveResult(wpm, accuracy, correctChars, errors);
-      
-      // Update keyboard heatmap with errors
+      saveResult(wpm, rawWpm, accuracy, totalTyped, correctChars, errors);
       updateKeyboardHeatmap();
+    }
+
+    // Personal best
+    function getPersonalBest() {
+      return parseInt(localStorage.getItem('typetest-pb') || '0');
+    }
+
+    function setPersonalBest(wpm) {
+      localStorage.setItem('typetest-pb', wpm.toString());
     }
 
     // Reset test
@@ -869,31 +1436,30 @@
       resultsOverlay.classList.remove('visible');
       hiddenInput.value = '';
       
-      // Reset keyboard
-      document.querySelectorAll('.key').forEach(k => k.classList.remove('error-key', 'pressed'));
+      document.querySelectorAll('.key').forEach(k => {
+        k.classList.remove('error-key', 'pressed');
+        k.removeAttribute('data-errors');
+      });
       
       progressBar.style.width = '0%';
+      updateCaret();
     }
 
-    // Handle key press on keyboard display
+    // Flash key
     function flashKey(key) {
       const keyUpper = key.toUpperCase();
-      const keyEl = document.querySelector(`.key[data-key="${keyUpper}"]`) ||
-                    document.querySelector(`.key[data-key="${key}"]`);
+      let keyEl = document.querySelector(`.key[data-key="${keyUpper}"]`) ||
+                  document.querySelector(`.key[data-key="${key}"]`);
       
-      if (key === ' ') {
-        const spaceKey = document.querySelector('.key.space');
-        if (spaceKey) {
-          spaceKey.classList.add('pressed');
-          setTimeout(() => spaceKey.classList.remove('pressed'), 100);
-        }
-      } else if (keyEl) {
+      if (key === ' ') keyEl = document.querySelector('.key.space');
+      
+      if (keyEl) {
         keyEl.classList.add('pressed');
-        setTimeout(() => keyEl.classList.remove('pressed'), 100);
+        setTimeout(() => keyEl.classList.remove('pressed'), 80);
       }
     }
 
-    // Mark key as error
+    // Mark key error
     function markKeyError(key) {
       const keyUpper = key.toUpperCase();
       keyErrors[keyUpper] = (keyErrors[keyUpper] || 0) + 1;
@@ -902,27 +1468,32 @@
     // Update keyboard heatmap
     function updateKeyboardHeatmap() {
       Object.entries(keyErrors).forEach(([key, count]) => {
-        if (count >= 2) {
-          const keyEl = document.querySelector(`.key[data-key="${key}"]`);
-          if (keyEl) keyEl.classList.add('error-key');
+        if (count >= 1) {
+          let keyEl = document.querySelector(`.key[data-key="${key}"]`);
+          if (key === ' ') keyEl = document.querySelector('.key.space');
+          if (keyEl) {
+            keyEl.classList.add('error-key');
+            if (count > 1) keyEl.dataset.errors = count;
+          }
         }
       });
     }
 
-    // Save result to localStorage
-    function saveResult(wpm, accuracy, chars, errs) {
+    // Save result
+    function saveResult(wpm, rawWpm, accuracy, chars, correct, errs) {
       const history = JSON.parse(localStorage.getItem('typetest-history') || '[]');
       history.unshift({
         date: new Date().toISOString(),
         wpm,
+        rawWpm,
         accuracy,
         chars,
+        correct,
         errors: errs,
         duration: testDuration,
         mode: testMode
       });
-      // Keep last 20
-      localStorage.setItem('typetest-history', JSON.stringify(history.slice(0, 20)));
+      localStorage.setItem('typetest-history', JSON.stringify(history.slice(0, 50)));
       renderHistory();
     }
 
@@ -931,24 +1502,41 @@
       const history = JSON.parse(localStorage.getItem('typetest-history') || '[]');
       
       if (history.length === 0) {
-        historyList.innerHTML = '<div class="empty-history">No tests completed yet</div>';
+        historyList.innerHTML = '<div class="empty-history">Complete a test to see your history</div>';
         return;
       }
       
-      historyList.innerHTML = history.slice(0, 5).map(h => {
+      historyList.innerHTML = history.slice(0, 8).map(h => {
         const date = new Date(h.date);
-        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         return `
           <div class="history-item">
-            <div class="history-date">${dateStr}</div>
+            <div class="history-left">
+              <div class="history-wpm">${h.wpm}</div>
+              <div class="history-meta">
+                <div class="history-date">${dateStr} ${timeStr}</div>
+                <div class="history-mode">${h.duration}s ${h.mode}</div>
+              </div>
+            </div>
             <div class="history-stats">
-              <div class="history-stat"><span>${h.wpm}</span> WPM</div>
-              <div class="history-stat"><span>${h.accuracy}%</span> Acc</div>
-              <div class="history-stat">${h.duration}s ${h.mode}</div>
+              <div class="history-stat"><span>${h.accuracy}%</span> acc</div>
+              <div class="history-stat"><span>${h.rawWpm}</span> raw</div>
             </div>
           </div>
         `;
-      }).join('');
+      }).join('') + `
+        <div class="clear-history">
+          <button onclick="clearHistory()">Clear History</button>
+        </div>
+      `;
+    }
+
+    function clearHistory() {
+      if (confirm('Clear all history?')) {
+        localStorage.removeItem('typetest-history');
+        renderHistory();
+      }
     }
 
     // Input handler
@@ -958,68 +1546,72 @@
       const typed = e.target.value;
       const lastChar = typed[typed.length - 1];
       
-      if (!isActive && lastChar) {
-        startTest();
-      }
-      
+      if (!isActive && lastChar) startTest();
       if (!isActive) return;
       
-      // Process each character
-      if (typed.length > 0) {
+      if (typed.length > 0 && currentIndex < currentText.length) {
         const expectedChar = currentText[currentIndex];
+        const isCorrect = lastChar === expectedChar;
         
-        if (lastChar === expectedChar) {
-          correctChars++;
-          currentIndex++;
-        } else {
-          errors++;
-          currentIndex++;
-          markKeyError(expectedChar);
+        // Update character styling
+        const charEl = charElements[currentIndex];
+        if (charEl) {
+          charEl.classList.remove('upcoming', 'current');
+          charEl.classList.add(isCorrect ? 'correct' : 'incorrect');
         }
         
+        if (isCorrect) {
+          correctChars++;
+          playKeySound(false);
+        } else {
+          errors++;
+          markKeyError(expectedChar);
+          playKeySound(true);
+        }
+        
+        currentIndex++;
         totalTyped++;
+        
         flashKey(lastChar);
         hiddenInput.value = '';
         
-        renderText();
+        updateCaret();
         updateStats();
         
-        // Check if completed
-        if (currentIndex >= currentText.length) {
-          endTest();
-        }
+        if (currentIndex >= currentText.length) endTest();
       }
     });
 
-    // Handle special keys
+    // Special keys
     document.addEventListener('keydown', (e) => {
-      // Focus input on any key
-      if (!isFinished && !['Tab', 'Escape'].includes(e.key)) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        if (e.shiftKey || document.activeElement !== hiddenInput) {
+          hiddenInput.focus();
+        }
+      }
+      
+      if (e.key === 'Enter' && (isFinished || !isActive)) {
+        resetTest();
         hiddenInput.focus();
       }
       
-      // Tab + Enter to restart
-      if (e.key === 'Tab') {
-        e.preventDefault();
-      }
-      if (e.key === 'Enter' && document.activeElement === document.body) {
+      if (e.key === 'Escape') {
+        resultsOverlay.classList.remove('visible');
         resetTest();
       }
       
-      // Escape to close results
-      if (e.key === 'Escape') {
-        resultsOverlay.classList.remove('visible');
+      if (!isFinished && !['Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
+        hiddenInput.focus();
       }
     });
 
     // Click to focus
     typingContainer.addEventListener('click', () => {
-      if (!isFinished) {
-        hiddenInput.focus();
-      }
+      if (!isFinished) hiddenInput.focus();
     });
 
-    // Settings handlers
+    // Settings
     document.querySelectorAll('#time-settings .setting-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('#time-settings .setting-btn').forEach(b => b.classList.remove('active'));
@@ -1038,19 +1630,40 @@
       });
     });
 
-    // Results buttons
-    document.getElementById('restart-btn').addEventListener('click', resetTest);
+    // Result buttons
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      resetTest();
+      hiddenInput.focus();
+    });
+    
     document.getElementById('view-history-btn').addEventListener('click', () => {
       resultsOverlay.classList.remove('visible');
       historyList.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Keyboard toggle
+    document.getElementById('keyboard-toggle').addEventListener('click', (e) => {
+      keyboard.classList.toggle('hidden');
+      e.target.textContent = keyboard.classList.contains('hidden') ? 'show' : 'hide';
+    });
+
+    // Sound toggle
+    soundToggle.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+      soundToggle.classList.toggle('active', soundEnabled);
+      if (soundEnabled && audioCtx.state === 'suspended') audioCtx.resume();
+    });
+
+    // Window resize
+    window.addEventListener('resize', () => {
+      if (!isFinished) updateCaret();
     });
 
     // Initialize
     initKeyboard();
     renderHistory();
     resetTest();
-    
-    // Auto-focus
     setTimeout(() => hiddenInput.focus(), 100);
   </script>
 </body>
